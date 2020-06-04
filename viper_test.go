@@ -84,25 +84,6 @@ var jsonExample = []byte(`{
     }
 }`)
 
-var hclExample = []byte(`
-id = "0001"
-type = "donut"
-name = "Cake"
-ppu = 0.55
-foos {
-	foo {
-		key = 1
-	}
-	foo {
-		key = 2
-	}
-	foo {
-		key = 3
-	}
-	foo {
-		key = 4
-	}
-}`)
 
 var propertiesExample = []byte(`
 p_id: 0001
@@ -147,9 +128,6 @@ func initConfigs() {
 	r = bytes.NewReader(jsonExample)
 	unmarshalReader(r, v.config)
 
-	SetConfigType("hcl")
-	r = bytes.NewReader(hclExample)
-	unmarshalReader(r, v.config)
 
 	SetConfigType("properties")
 	r = bytes.NewReader(propertiesExample)
@@ -218,13 +196,6 @@ func initDotEnv() {
 	unmarshalReader(r, v.config)
 }
 
-func initHcl() {
-	Reset()
-	SetConfigType("hcl")
-	r := bytes.NewReader(hclExample)
-
-	unmarshalReader(r, v.config)
-}
 
 func initIni() {
 	Reset()
@@ -452,16 +423,6 @@ func TestDotEnv(t *testing.T) {
 	assert.Equal(t, "DotEnv Example", Get("title_dotenv"))
 }
 
-func TestHCL(t *testing.T) {
-	initHcl()
-	assert.Equal(t, "0001", Get("id"))
-	assert.Equal(t, 0.55, Get("ppu"))
-	assert.Equal(t, "donut", Get("type"))
-	assert.Equal(t, "Cake", Get("name"))
-	Set("id", "0002")
-	assert.Equal(t, "0002", Get("id"))
-	assert.NotEqual(t, "cronut", Get("type"))
-}
 
 func TestIni(t *testing.T) {
 	initIni()
@@ -1300,31 +1261,6 @@ func TestSub(t *testing.T) {
 	assert.Equal(t, (*Viper)(nil), subv)
 }
 
-var hclWriteExpected = []byte(`"foos" = {
-  "foo" = {
-    "key" = 1
-  }
-
-  "foo" = {
-    "key" = 2
-  }
-
-  "foo" = {
-    "key" = 3
-  }
-
-  "foo" = {
-    "key" = 4
-  }
-}
-
-"id" = "0001"
-
-"name" = "Cake"
-
-"ppu" = 0.55
-
-"type" = "donut"`)
 
 var jsonWriteExpected = []byte(`{
   "batters": {
@@ -1382,30 +1318,6 @@ func TestWriteConfig(t *testing.T) {
 		input           []byte
 		expectedContent []byte
 	}{
-		"hcl with file extension": {
-			configName:      "c",
-			inConfigType:    "hcl",
-			outConfigType:   "hcl",
-			fileName:        "c.hcl",
-			input:           hclExample,
-			expectedContent: hclWriteExpected,
-		},
-		"hcl without file extension": {
-			configName:      "c",
-			inConfigType:    "hcl",
-			outConfigType:   "hcl",
-			fileName:        "c",
-			input:           hclExample,
-			expectedContent: hclWriteExpected,
-		},
-		"hcl with file extension and mismatch type": {
-			configName:      "c",
-			inConfigType:    "hcl",
-			outConfigType:   "json",
-			fileName:        "c.hcl",
-			input:           hclExample,
-			expectedContent: hclWriteExpected,
-		},
 		"json with file extension": {
 			configName:      "c",
 			inConfigType:    "json",
@@ -1425,7 +1337,7 @@ func TestWriteConfig(t *testing.T) {
 		"json with file extension and mismatch type": {
 			configName:      "c",
 			inConfigType:    "json",
-			outConfigType:   "hcl",
+			outConfigType:   "properties",
 			fileName:        "c.json",
 			input:           jsonExample,
 			expectedContent: jsonWriteExpected,
